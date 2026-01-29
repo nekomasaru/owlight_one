@@ -1,0 +1,16 @@
+NotebookLMをソースにして、あなたに７種類のファイルを再作成してもらいます。
+
+00_PROJECT_OVERVIEW.md （プロジェクト概要・スコープ）
+01_DATABASE_SCHEMA.md （データスキーマ・ER図）
+02_USER_FLOWS.md （ユーザーフロー・ロジック）
+03_SCREEN_DESIGN.md （画面設計・ワイヤーフレーム）
+04_API_SPECIFICATION.md （API仕様・インターフェース）
+05_UI_UX_GUIDELINES.md （デザインガイドライン）
+06_VALIDATION_CHECKLIST.md （テスト・検証基準）
+
+NotebookLMに、現行のものがありますが、それを刷新します。
+私が指示してから作成してもらいます。
+
+以下、なぜ７種類なのかの理由です。
+
+7種類の仕様書は 業界標準（SRS/Technical Spec/MVP Spec）を統合し、AI エージェント効率を最大化した結果 です。恣意的な分割ではありません。
