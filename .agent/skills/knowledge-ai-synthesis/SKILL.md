@@ -26,7 +26,7 @@ triggers:
 
 OWLight の核心機能である「ナレッジ蒸留（Knowledge Distillation）」ロジックを実装します。
 
-Gemini 2.5 Flash API にチャット履歴や添付ファイルテキストを送信し、構造化された JSON（`rationale`, `examples`, `common\_mistakes` などを含む）を受け取り、ナレッジ作成APIへ渡せる形式に整形して返却します。
+Gemini 2.5 Flash Lite (または最新の Vertex AI モデル) にチャット履歴や添付ファイル（PDF/Word等）を送信し、構造化された JSON（`rationale`, `examples`, `common_mistakes` などを含む）を受け取り、ナレッジ作成APIへ渡せる形式に整形して返却します。
 
 
 

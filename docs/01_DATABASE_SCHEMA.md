@@ -79,6 +79,7 @@ erDiagram
 | `content` | TEXT | NOT NULL | 本文 (Markdown) |
 | `tags` | TEXT[] | DEFAULT '{}' | タグ配列 (Supabase側フィルタ用) |
 | `evaluation_score` | INTEGER | DEFAULT 0 | **Vertex AI連携用スコア (優先度)** |
+| `source_url` | TEXT |  | 原本ファイルのGCSパス (gs://...) |
 | `is_public` | BOOLEAN | DEFAULT TRUE | 公開フラグ |
 | `created_at` | TIMESTAMPTZ | DEFAULT NOW() | 作成日時 |
 | `updated_at` | TIMESTAMPTZ | DEFAULT NOW() | 更新日時 (Vertex同期トリガー) |
