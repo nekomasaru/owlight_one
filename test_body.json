@@ -1,0 +1,9 @@
+{
+    "intent": "Generate",
+    "chat_history": [
+        {
+            "role": "user",
+            "text": "OWLightプロジェクトについて簡単に説明して"
+        }
+    ]
+}

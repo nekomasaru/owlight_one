@@ -62,7 +62,7 @@ export async function searchVertexAI(query: string): Promise<SearchResultItem[]>
         const searchItems: SearchResultItem[] = results.map((result: any) => {
             return {
                 id: result.document?.id || '',
-                // score はメタデータに含まれる場合があるが、ここでは検索順位自体をスコアとみなす
+                score: result.relevanceScore || 0, // 0 to 1
             };
         }).filter((item: any) => item.id !== ''); // IDがないものは除外
 

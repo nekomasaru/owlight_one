@@ -14,6 +14,7 @@
 
 組織内に埋もれている「暗黙知」や「個人の悩み」に光を当て、誰もが安心して成長できる環境（サンクチュアリ）を提供します。
 単なるWikiではなく、**「誰がどのような強み（ロールモデル）を持っているか」**を可視化し、**「適切な評価と称賛」**を循環させることで、組織全体のエンゲージメントを高めます。
+知恵（Wisdom）の蓄積と共有が、組織の成長を加速させるコアとなります。
 
 ## 3. 技術スタック
 
@@ -24,7 +25,7 @@
 | **Backend** | Node.js (API Routes / Server Actions) |
 | **Database** | PostgreSQL (Supabase) |
 | **Auth** | Supabase Auth (Email/Password, MFA) |
-| **Infrastructure** | Vercel (Hosting), Supabase (BaaS) |
+| **Infrastructure** | Vercel (Hosting), Supabase (BaaS) with Self-Healing Client |
 | **Testing** | Playwright (E2E), Jest (Unit) |
 | **AI/Search** | **Google Cloud Vertex AI** (Gemini Pro, Vector Search) |
 
@@ -63,14 +64,22 @@
 
 Vertex AI の検索能力と Supabase のデータ管理を組み合わせたRAG検索です。
 
-* **ハイブリッド検索**: Vertex AI Search で自然言語検索を行い、該当ドキュメントIDを取得後、Supabaseから実データを表示。
-* **スコア連携**: 組織内での評価スコア（優先度）を Vertex AI にメタデータとして連携し、検索ランキングに反映。
+* **ハイブリッド検索**: Vertex AI Search で自然言語検索を行い、該当ドキュメントIDを取得後、Supabaseから実データ（知恵）を表示。
+* **スコア連携**: 組織内でのクオリティスコア（優先度）を Vertex AI にメタデータとして連携し、検索ランキングに反映。
 * **AI Answer**: 検索結果に基づいた要約回答を表示。
 
 ### F. Admin Console (管理機能)
 
 * **ユーザー管理**: 権限管理とステータス変更。
 * **プロンプトエンジニアリング**: Vertex AI に渡すシステムプロンプトの管理。
+
+### G. Reliability & Self-Healing (高可用性)
+
+フェイルセーフなインフラ基盤により、システムの安定稼働を保証します。
+
+* **Self-Healing Client**: 接続障害を自動検知し、指数バックオフによる自動復旧を実行。
+* **Circuit Breaker**: 障害時の連鎖的なダウンを防ぐ遮断機構。
+* **Health Monitoring**: 30秒ごとのヘルスチェックとパフォーマンストラッキング。
 
 ## 5. ディレクトリ構造（主要部分のみ）
 
@@ -80,13 +89,15 @@ src/
 │   ├── (auth)/          # ログイン、登録、MFA
 │   ├── (main)/          # メインアプリ画面
 │   │   ├── home/        # ダッシュボード
-│   │   ├── knowledge/   # ナレッジ検索・投稿
+│   │   ├── wisdom/      # 知恵（Wisdom）検索・投稿
 │   │   ├── profile/     # ユーザー設定
 │   │   ├── growth/      # 成長グラフ
 │   │   ├── search/      # 検索結果 (Vertex AI連携)
 │   │   └── safety/      # サンクチュアリ関連
 │   ├── admin/           # 管理者専用画面
 │   ├── api/             # API Routes
+│   │   └── v1/
+│   │       └── wisdom/  # 知恵関連API
 │   ├── error.tsx        # Global Error Boundary
 │   └── not-found.tsx    # 404 Page
 ├── components/

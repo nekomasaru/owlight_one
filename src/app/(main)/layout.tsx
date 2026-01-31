@@ -1,23 +1,33 @@
+'use client'
+
+import { useState } from "react";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
+import { MainContentWrapper } from "@/components/layout/main-content-wrapper";
+import { cn } from "@/lib/utils";
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
     return (
         <div className="flex h-screen overflow-hidden bg-background">
             {/* Sidebar (Desktop) */}
-            <aside className="hidden w-64 border-r bg-card md:block">
+            <aside className={cn(
+                "hidden border-r bg-card md:block transition-all duration-300 ease-in-out overflow-hidden flex-shrink-0",
+                isSidebarCollapsed ? "w-20" : "w-64"
+            )}>
                 <div className="flex h-full flex-col p-4">
-                    <div className="h-14 flex items-center font-bold text-xl px-2 text-primary mb-2">OWLight</div>
-                    <Sidebar />
+                    <Sidebar
+                        isCollapsed={isSidebarCollapsed}
+                        onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                    />
                 </div>
             </aside>
 
             {/* Main Content */}
             <div className="flex flex-1 flex-col overflow-hidden">
                 <Header />
-                <main className="flex-1 overflow-y-auto p-4 md:p-6 scroll-smooth">
-                    {children}
-                </main>
+                <MainContentWrapper>{children}</MainContentWrapper>
             </div>
         </div>
     );

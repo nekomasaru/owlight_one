@@ -5,8 +5,10 @@
 @layer base {
   :root {
     /* Base Color: Slate (Soft White Background) */
-    --background: 210 40% 98%; /* #F8FAFC (Slate-50) */
-    --foreground: 222 47% 11%; /* #0F172A (Slate-900) */
+    --background: 210 40% 98%;
+    /* #F8FAFC (Slate-50) */
+    --foreground: 222 47% 11%;
+    /* #0F172A (Slate-900) */
 
     /* Card & Surface */
     --card: 0 0% 100%;
@@ -18,9 +20,9 @@
     --primary: 179 62% 35%;
     --primary-foreground: 210 40% 98%;
 
-    /* Secondary: Sage Green (#5D9C59 -> HSL approx 117 29% 48%) */
-    --secondary: 117 29% 48%;
-    --secondary-foreground: 210 40% 98%;
+    /* Secondary: Slate-200/250 (Neutral Darker Grey) for better visibility */
+    --secondary: 215 25% 88%;
+    --secondary-foreground: 222 47% 11%;
 
     /* Muted */
     --muted: 210 40% 96.1%;
@@ -37,7 +39,8 @@
     /* Borders & Inputs */
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 179 62% 35%; /* Primary Ring */
+    --ring: 179 62% 35%;
+    /* Primary Ring */
 
     --radius: 0.5rem;
   }
@@ -55,7 +58,7 @@
     --primary: 179 62% 35%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 117 29% 48%;
+    --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
 
     --muted: 217.2 32.6% 17.5%;
@@ -77,6 +80,7 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }

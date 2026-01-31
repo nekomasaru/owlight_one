@@ -12,7 +12,7 @@ Tealをプライマリーとし、目に優しい中間色を多用します。�
 | Role | Color Name | Hex Code | Usage |
 | --- | --- | --- | --- |
 | **Primary** | **Owl Teal** | `#218F8D` | メインアクション、ロゴ、アクティブ状態 |
-| **Secondary** | **Sage Green** | `#5D9C59` | 肯定的なフィードバック、成長グラフ |
+| **Secondary** | **Slate Grey** | `var(--secondary)` | キャンセル、サブアクション、補佐的ボタン |
 | **Background** | **Soft White** | `#F8FAFC` | アプリケーション背景 (Slate-50) |
 | **Surface** | **Pure White** | `#FFFFFF` | カード、サイドバー背景 |
 | **Text Main** | **Dark Slate** | `#1E293B` | 本文、見出し (Slate-800) |
@@ -51,8 +51,8 @@ Tealをプライマリーとし、目に優しい中間色を多用します。�
 ### Buttons
 
 * **Primary**: Teal背景 + 白文字。角丸 (`rounded-md` or `rounded-full`)。ホバー時は輝度を落とす。
-* **Secondary**: 白背景 + Teal枠線 + Teal文字。
-* **Ghost**: 背景なし。ホバー時のみ薄いグレー背景。
+* **Secondary**: 薄いグレー背景 (`Slate-200`) + 濃いグレー文字。キャンセルや否定的なアクション。
+* **Outline**: 背景なし + 枠線あり。補助的なアクション。
 
 ### Cards (ナレッジ・検索結果)
 
@@ -79,6 +79,7 @@ Supabaseの `evaluation_score` 値に基づき、情報の信頼性を可視化�
 
 * **Border**: 通常時は `slate-300`。フォーカス時は `teal-500` のリングを表示。
 * **Error**: 枠線を `red-400` に変更し、下部に優しい口調のエラーメッセージを表示。
+* **Search Input**: 背景色は明確に区別するため `bg-white` (Dark: `bg-zinc-950`) を使用し、入力エリアとしての視認性を高める。
 
 ## 4. レイアウトとスペーシング
 
@@ -88,9 +89,26 @@ Supabaseの `evaluation_score` 値に基づき、情報の信頼性を可視化�
 * **Base**: 0
 * **Header (Sticky)**: 40
 * **Sidebar (Mobile Drawer)**: 50
+* **AI Panel (Resizable Sidebar)**: 20 (Main content overlaps if overlay, but here Side-by-Side is used)
 * **Modal / Dialog**: 60
 * **Toast Notification**: 70
 * **Tooltip**: 80
+
+## 4.1. スペシャルレイアウト (Special Layouts)
+
+### Gemini-Style App Sidebar
+* **State**: ハンバーガーアイコンにより「Expanded (256px)」と「Collapsed (80px)」を切り替え。
+* **Visual**: 閉じた状態ではアイコンのみを表示し、ツールチップでメニュー名を表示。境界線にドラッグ機能は持たせず、クリックによるトグル。
+
+### Persistent AI Sidebar (Side-by-Side)
+* **Resizable**: パネル左端のドラッグハンドルにより、ユーザーが幅を自由に調整可能（Min: 250px / Max: 1000px）。
+* **Collapsible**: `>>` アイコンで畳み、`<<` アイコンで展開。
+* **Persistence**: 開閉時もパネルをアンマウントせず、状態（チャット履歴・入力内容）を保持する。
+* **Scroll**: 画面全体のスクロールは禁止し、メインの編集エリアとAIパネルがそれぞれ独立して垂直スクロールするよう制御する。
+
+## 4.2. ウィザード形式のナビゲーション (Wizard Navigation)
+* **One Action at a Time**: 多機能なフォームでは、ステップ（タブ）ごとに「次へ」「戻る」のアクションを強調し、認知的負荷を下げる。
+* **Submission Restriction**: 最終ステップに到達するまで「保存」アクションは非表示または無効化し、ユーザーが全項目を順に確認する動線を作る。
 
 
 
@@ -113,3 +131,31 @@ Supabaseの `evaluation_score` 値に基づき、情報の信頼性を可視化�
 * **Contrast**: テキストと背景のコントラスト比は 4.5:1 以上を確保（WCAG AA）。
 * **Keyboard Nav**: 全てのインタラクティブ要素に `focus-visible` スタイル（Teal色の太いアウトライン）を設定。
 * **Semantic HTML**: 適切なタグ (`<main>`, `<nav>`, `<article>`, `<button>`) の使用を徹底。
+
+## 7. System & Connectivity States
+
+システムの接続状態や障害時のフィードバックに関するルールです。
+
+* **Connecting / Reconnecting**:
+  * ユーザーの操作を妨げない「非侵入的」なインジケータ（Toastや画面隅のステータスアイコン）を使用。
+  * **Color**: `Amber` (Warning) または `Blue` (Info)。"再接続中..." のような短いメッセージ。
+
+* **Offline / Down**:
+  * サーキットブレーカー発動時は、画面全体をブロックせず、影響を受けるパーツのみを「メンテナンス中/オフライン」表示に切り替える。
+  * **Message**: 技術的なエラーコードではなく、「現在アクセスしづらくなっています。自動復旧を試みています」といった安心感を与える表現。
+
+* **Admin Dashboard (Health)**:
+  * **Healthy**: `Teal` or `Green`
+  * **Degraded**: `Amber` (レイテンシ高騰など)
+  * **Down**: `Red`
+
+## 8. Knowledge Creation Flow (Search First)
+
+ナレッジマネジメントシステムの体験を分断させないため、**「Search First (検索・対話が先)」** の原則を徹底します。
+
+1.  **Entrance (入口)**: ユーザーは必ず「AIチャット」または「検索」から開始します。
+2.  **Transition (移行)**: 検索結果が0件、またはAIが回答できない場合にのみ、「ナレッジを作成する」または「リクエストする」のアクションを提示します。
+3.  **Inheritance (継承)**: 作成画面へ移行する際は、直前の検索キーワードやチャット内容を自動的に引き継ぎ、入力負荷を軽減します。
+    - *Bad UI*: いきなり空白のフォームを表示する。
+    - *Good UI*: 「〇〇について」というタイトルが既に入力された状態でエディタが開く。
+

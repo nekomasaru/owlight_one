@@ -58,7 +58,7 @@ Vertex AI の検索能力で「順序（IDリスト）」を決定し、Supabase
 
 
 2. **Supabase (Content Retrieval)**:
-* Vertex AI から返却された IDリスト を条件に `knowledges` テーブルを検索 (`WHERE id IN (...)`)。
+* Vertex AI から返却された IDリスト を条件に `wisdoms` テーブルを検索 (`WHERE id IN (...)`)。
 * タイトル、本文スニペット、著者、評価スコア、タグなどの表示用データを取得。
 
 
@@ -75,7 +75,7 @@ Vertex AI の検索能力で「順序（IDリスト）」を決定し、Supabase
   "ai_answer": "ReactはUI構築ライブラリです...", // Vertex AI Summary (Optional)
   "hits": [
     {
-      "id": "uuid", // Supabase ID
+      "id": 123, // Supabase ID (int)
       "title": "React Hooks入門", // From Supabase
       "snippet": "useStateは...", // From Supabase (contentの一部)
       "author": { "name": "Taro", "avatar_url": "..." }, // From Supabase
@@ -98,11 +98,11 @@ Vertex AI の検索能力で「順序（IDリスト）」を決定し、Supabase
 * **Source**: Vertex AI Search (Autocomplete API)
 * **Response**: `{ "suggestions": ["React Hooks", "React Performance", ...] }`
 
-## 3. Knowledge Module
+## 3. Wisdom Module
 
-### POST /api/v1/knowledge
+### POST /api/v1/wisdom
 
-ナレッジを新規作成します。
+「知恵」を新規作成します。
 
 * **Request**:
 ```json
@@ -117,22 +117,116 @@ Vertex AI の検索能力で「順序（IDリスト）」を決定し、Supabase
 
 
 * **Side Effect**:
-* Supabase にデータを保存 (`evaluation_score` 初期値 0)。
+* Supabase にデータを保存 (`quality_score` 初期値 0)。
 * 非同期ジョブで Vertex AI のインデックスにデータを連携（ID, Title, Content, Score=0）。
 
 
 
-### GET /api/v1/knowledge/:id
+### GET /api/v1/wisdom
 
-ナレッジの詳細（Supabase データ）を取得します。
+知恵の一覧を取得します。ダイナミック・ダッシュボード等の表示に使用されます。
 
-### PUT /api/v1/knowledge/:id
+* **Query Params**:
+    * `sort`: ソート条件
+        * `latest`: 新着順（デフォルト）
+        * `rating`: 評価スコア（高品質）順
+        * `discussion`: 話題順（モック：現在は最新順）
+        * `contribution`: 貢献募集（未完成・スコア低）順
+        * `updated`: 最近の更新順
+        * `recommended`: あなたへのおすすめ（モック：現在は最新順）
+        * `seasonal`: 季節のトピック（モック：特定のタグを含む）
+    * `limit`: 取得件数 (デフォルト: 10)
 
-ナレッジを更新します。Supabase 更新後、Vertex AI へ再同期を行います。
+* **Response**:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 123,
+      "title": "...",
+      "content": "...",
+      "quality_score": 90,
+      "tags": ["...", "..."],
+      "created_at": "..."
+    }
+  ]
+}
+```
 
-### DELETE /api/v1/knowledge/:id
+### GET /api/v1/wisdom/:id
 
-ナレッジを削除します。
+知恵の詳細（Supabase データ）を取得します。
+正規化された関連データ（tags, references, cases, comments）を1回で取得する際は RPC `get_wisdom_full_context` の利用を推奨します。
+
+### PUT /api/v1/wisdom/:id
+
+知恵を更新します。Supabase 更新後、Vertex AI へ再同期を行います。
+
+### DELETE /api/v1/wisdom/:id
+
+知恵を削除します。
+
+### POST /api/v1/wisdom/:id/comments
+
+コメント（補足・質問）を投稿します。
+
+* **Request**: `{ "comment_text": "...", "comment_type": "correction" | "addition" | ... }`
+* **Response**: Comment Object (including user info)
+
+### GET /api/v1/wisdom/:id/comments
+
+知恵に紐づくコメント一覧を取得します。
+
+* **Response**: List of Comment Objects
+
+### POST /api/v1/wisdom/:id/engagement
+
+「感謝（いいね）」や「コピー」などのアクションを記録します。
+
+* **Request**: `{ "type": "like" | "copy" | "helpful" }`
+* **Logic**:
+    * `like`: `wisdoms.like_count` を加算。
+    * `helpful`: `wisdoms.helpful_count` を加算。
+* **Response**: `{ "success": true, "new_count": 123 }`
+
+### POST /api/v1/wisdom/synthesize
+
+AIとの対話を通じて知恵を生成・修正する (Iterative Refinement) APIです。
+チャット履歴 (`chat_history`) をコンテキストとして受け取り、文脈を踏まえた修正提案を行います。
+AIとの対話を通じてナレッジを生成・修正する (Iterative Refinement) APIです。
+チャット履歴 (`chat_history`) をコンテキストとして受け取り、文脈を踏まえた修正提案を行います。
+
+- **モデル**: 最新の `gemini-2.5-flash-lite` を使用。
+- **認証**: **OAuth 2.0 アクセストークン (ADC)** 方式を採用。`google-auth-library` を用いて動的に取得したトークンを `Authorization: Bearer` ヘッダーに付与する。
+- **プロトコル**: 安定性と最新モデルへの対応のため、REST API (`generateContent`) を直接 `fetch` する。
+
+プロダクション環境では、AIの思考過程やテキスト生成をリアルタイムで表示するために、**Server-Sent Events (SSE)** によるストリーミング応答を推奨します。
+
+* **Request**:
+```json
+{
+  "intent": "Generate" | "Refine" | "Summarize",
+  "chat_history": [
+    { "role": "user", "text": "ユニコーンの飼い方を教えて" },
+    { "role": "model", "text": "承知しました...", "data": { "title": "...", "content": "..." } }
+  ],
+  "file_data": "base64_string..." // Optional (for Summarize intent)
+}
+```
+
+* **Response (Standard)**:
+```json
+{
+  "message": "ユニコーンの飼育に関する基本的な知恵を生成しました。具体例を追加したい場合は指示してください。",
+  "data": {
+    "title": "ユニコーン飼育ガイドライン",
+    "content": "...",
+    "references": [...],
+    "cases": [...]
+  }
+}
+```
 
 ## 4. Role Model Module
 
@@ -176,11 +270,11 @@ Vertex AI の検索能力で「順序（IDリスト）」を決定し、Supabase
 
 ピアボーナス（称賛）を送信し、関連するスコアを更新します。
 
-* **Request**: `{ "receiver_id": "uuid", "target_knowledge_id": "uuid", "points": 10, "message": "Thanks!" }`
+* **Request**: `{ "receiver_id": "uuid", "target_wisdom_id": 123, "points": 10, "message": "Thanks!" }`
 * **Logic**:
 1. `peer_rewards` テーブルに記録。
 2. 受信ユーザーの合計ポイントを更新。
-3. **対象ナレッジがある場合、その `evaluation_score` を加算更新 (Supabase)。**
+3. **対象の知恵がある場合、その `quality_score` 加算の検討材料とする (Supabase)。**
 4. **更新されたスコアを Vertex AI のメタデータとして同期 (検索順位への反映)。**
 
 
@@ -219,3 +313,49 @@ SOSアラートを送信します。
 ### PUT /api/v1/admin/prompts/:key
 
 指定されたキーのシステムプロンプトを更新し、次回以降の Vertex AI 呼び出しに反映させます。
+
+## 8. Infrastructure & Monitoring
+
+### GET /api/health
+
+システムの稼働状況を確認します。外部監視サービス (Uptime Robot等) からの利用を想定しています。
+
+* **Response (Status 200)**:
+```json
+{
+  "status": "healthy",
+  "latency": 45, // ms
+  "timestamp": "2023-10-01T..."
+}
+```
+* **Response (Status 503)**:
+```json
+{
+  "status": "down",
+  "error": "Database connection failed"
+}
+```
+
+### POST /api/alerts
+
+重大なシステム障害が発生した際に、クライアントまたはサーバー内部から呼び出され、管理者に通知を行います。
+
+* **Request**:
+```json
+{
+  "level": "critical",
+  "message": "Supabase connection failed 5 times in a row.",
+  "metadata": { "retry_count": 5, "last_error": "..." }
+}
+```
+* **Response**: `{ "success": true }`
+
+## 9. Wisdom Features (Future V2)
+
+### REQ-00X: Wisdom Request (知恵執筆リクエスト)
+検索しても情報が見つからず、かつ自分でも書けない場合、ユーザーは「リクエスト」を登録できます。
+
+- **POST /api/v1/wisdom-requests**
+    - 説明: 知恵の執筆依頼を登録する。
+    - Body: `{ "query": "検索キーワード", "description": "知りたい内容", "priority": "normal" }`
+    - 処理: `wisdom_requests` テーブルへ保存し、管理者に通知する。
